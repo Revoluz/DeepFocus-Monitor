@@ -250,6 +250,8 @@ class StateManager:
                 return 'PHONE_ALERT'
             elif self.phone_cnt >= config.PHONE_DISTRACTED_FRAMES:
                 return 'DISTRACTED'
+        if head_pose and abs(head_pose.get('yaw', 0)) > config.HEAD_POSE_YAW_THRESHOLD:
+            return 'LOOKING_AWAY'
         return state
 
     def check_break(self, tracker):

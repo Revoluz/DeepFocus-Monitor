@@ -64,8 +64,8 @@ class SimpleDashboard:
         self.timer_lbl.configure(text=f"Session: {self.tracker.duration()}")
         self.focus_lbl.configure(text=f"Focus Score: {self.tracker.focus_score():.1f}%")
 
-        colors = {'NORMAL': 'green', 'YAWNING': 'orange', 'DROWSY': 'orange', 'DISTRACTED': 'darkorange', 'MICROSLEEP': 'red', 'PHONE_ALERT': 'red', 'FACE_LOST': 'gray'}
-        labels = {'NORMAL': 'FOKUS', 'YAWNING': 'MENGUAP', 'DROWSY': 'MENGANTUK', 'DISTRACTED': 'TERDISTRASI: HP', 'MICROSLEEP': 'MICROSLEEP!', 'PHONE_ALERT': 'HP TERLALU LAMA!', 'FACE_LOST': 'WAJAH HILANG'}
+        colors = {'NORMAL': 'green', 'YAWNING': 'orange', 'DROWSY': 'orange', 'DISTRACTED': 'darkorange', 'LOOKING_AWAY': 'orange', 'MICROSLEEP': 'red', 'PHONE_ALERT': 'red', 'FACE_LOST': 'gray'}
+        labels = {'NORMAL': 'FOKUS', 'YAWNING': 'MENGUAP', 'DROWSY': 'MENGANTUK', 'DISTRACTED': 'TERDISTRASI: HP', 'LOOKING_AWAY': 'MENOLEH', 'MICROSLEEP': 'MICROSLEEP!', 'PHONE_ALERT': 'HP TERLALU LAMA!', 'FACE_LOST': 'WAJAH HILANG'}
         self.status_lbl.configure(text=f"Status: {labels.get(status, status)}", fg=colors.get(status, 'black'))
 
         if ear is not None:

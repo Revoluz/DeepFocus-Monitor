@@ -55,11 +55,12 @@ HEAD_POSE_YAW_THRESHOLD = 20  # Batas sudut yaw (derajat) untuk deteksi menoleh
 # =============================================================================
 # Format warna: BGR (Blue, Green, Red) untuk OpenCV
 STATUS_COLORS = {
-    'NORMAL': (0, 255, 0),  # Hijau - kondisi fokus ideal
-    'YAWNING': (0, 165, 255),  # Oranye - peringatan menguap
-    'DROWSY': (0, 165, 255),  # Oranye - peringatan mengantuk
-    'DISTRACTED': (0, 140, 255),  # Oranye tua - terdistraksi memegang HP
-    'MICROSLEEP': (0, 0, 255),  # Merah - bahaya microsleep
-    'PHONE_ALERT': (0, 0, 255),  # Merah - bahaya HP terlalu lama
-    'FACE_LOST': (255, 255, 255),  # Putih - wajah tidak terdeteksi
+    'NORMAL': (0, 255, 0),
+    'YAWNING': (0, 165, 255),
+    'DROWSY': (0, 165, 255),
+    'DISTRACTED': (0, 140, 255),
+    'LOOKING_AWAY': (0, 165, 255),
+    'MICROSLEEP': (0, 0, 255),
+    'PHONE_ALERT': (0, 0, 255),
+    'FACE_LOST': (255, 255, 255),
 }
