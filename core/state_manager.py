@@ -121,6 +121,8 @@ class StateManager:
         self.classifier = None
         self.phone_counter = 0
         self.fps = fps
+        self.break_reminder_triggered = False
+        self.last_break_time = time.time()
 
     def calibrate(self, ear, lip_distance):
         done = self.calibration.add_sample(ear, lip_distance)
@@ -141,6 +143,12 @@ class StateManager:
 
         return False, self.calibration.get_progress(), self.calibration.get_remaining_seconds()
 
+    def reset_calibration(self):
+        self.calibration = DynamicCalibration(fps=self.fps)
+        self.classifier = None
+        self.phone_counter = 0
+        self.break_reminder_triggered = False
+
     def update(self, ear, lip_distance, head_pose, phone_detected, face_detected=True):
         if not face_detected:
             self.phone_counter = 0
@@ -158,3 +166,15 @@ class StateManager:
             return 'PHONE_ALERT'
 
         return state
+
+    def check_break_reminder(self, session_tracker):
+        if time.time() - self.last_break_time > 1800:
+            self.break_reminder_triggered = False
+
+        if not self.break_reminder_triggered:
+            message = session_tracker.check_break_reminder()
+            if message:
+                self.break_reminder_triggered = True
+                self.last_break_time = time.time()
+                return message
+        return None

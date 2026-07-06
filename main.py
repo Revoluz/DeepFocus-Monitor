@@ -1,12 +1,15 @@
 import cv2
 import time
+import threading
 import numpy as np
 from ultralytics import YOLO
 
 from core.face_analyzer import FaceAnalyzer
 from core.state_manager import StateManager
+from core.session_tracker import SessionTracker
 from core.alarm import Alarm
 from ui.overlay import Overlay
+from ui.dashboard import SimpleDashboard
 import config
 
 
@@ -21,8 +24,13 @@ def main():
 
     face_analyzer = FaceAnalyzer(fps=config.FPS)
     state_manager = StateManager(fps=config.FPS)
+    session_tracker = SessionTracker()
     alarm = Alarm()
     yolo_model = YOLO('yolov8n.pt')
+
+    dashboard = SimpleDashboard(session_tracker, state_manager, alarm)
+    dashboard_thread = threading.Thread(target=dashboard.run, daemon=True)
+    dashboard_thread.start()
 
     print("Sistem dimulai. Kalibrasi otomatis dalam 5 detik...")
     print("Instruksi: Hadapkan wajah ke kamera, mata terbuka, mulut tertutup.")
@@ -37,9 +45,14 @@ def main():
             break
 
         frame_count += 1
-        face_data = face_analyzer.analyze(frame)
+
+        if dashboard.recalibrating:
+            calibrating = True
+            dashboard.recalibrating = False
 
         if calibrating:
+            face_data = face_analyzer.analyze(frame)
+
             if face_data['face_detected']:
                 done, progress, remaining = state_manager.calibrate(
                     face_data['ear'],
@@ -48,6 +61,7 @@ def main():
 
                 if done:
                     calibrating = False
+                    dashboard.paused = False
                     print(f"Kalibrasi selesai!")
                     print(f"  EAR threshold: {state_manager.classifier.ear_threshold:.4f}")
                     print(f"  LIP threshold: {state_manager.classifier.lip_threshold:.4f}")
@@ -73,7 +87,18 @@ def main():
                                   (w // 2 - 100 + progress_width, h // 2 + 80),
                                   (0, 255, 0), -1)
 
+        elif dashboard.paused:
+            cv2.putText(frame, "PAUSED - Tekan tombol Resume di Dashboard",
+                        (50, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            cv2.imshow('Drowsiness & Study Distraction Detection', frame)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+            continue
+
         else:
+            face_data = face_analyzer.analyze(frame)
+
             yolo_results = yolo_model(frame, classes=config.YOLO_CLASSES, conf=config.YOLO_CONFIDENCE, verbose=False)
             annotated_frame = yolo_results[0].plot()
 
@@ -99,6 +124,8 @@ def main():
                 face_detected=face_data['face_detected']
             )
 
+            session_tracker.update(status, face_data['ear'], face_data['lip_distance'])
+
             if status in ['MICROSLEEP', 'PHONE_ALERT']:
                 alarm.play(status)
             else:
@@ -115,6 +142,8 @@ def main():
 
             annotated_frame = Overlay.draw(annotated_frame, status, info)
             frame = annotated_frame
+
+            dashboard.update(status, face_data['ear'], face_data['lip_distance'], face_data['head_pose'])
 
         cv2.imshow('Drowsiness & Study Distraction Detection', frame)
 
