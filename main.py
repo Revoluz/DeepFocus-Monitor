@@ -13,14 +13,36 @@ from ui.dashboard import SimpleDashboard
 import config
 
 
-def main():
-    cap = cv2.VideoCapture(config.CAMERA_INDEX)
-    if not cap.isOpened():
-        print(f"Error: Tidak dapat membuka kamera indeks {config.CAMERA_INDEX}")
-        return
+class CameraThread(threading.Thread):
+    def __init__(self, camera_index, width=640, height=480):
+        super().__init__()
+        self.cap = cv2.VideoCapture(camera_index)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        self.frame = None
+        self.running = True
+        self.lock = threading.Lock()
 
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    def run(self):
+        while self.running:
+            ret, frame = self.cap.read()
+            if ret:
+                with self.lock:
+                    self.frame = frame.copy()
+            time.sleep(1 / 30)
+
+    def get_frame(self):
+        with self.lock:
+            return self.frame
+
+    def stop(self):
+        self.running = False
+        self.cap.release()
+
+
+def main():
+    camera_thread = CameraThread(config.CAMERA_INDEX)
+    camera_thread.start()
 
     face_analyzer = FaceAnalyzer(fps=config.FPS)
     state_manager = StateManager(fps=config.FPS)
@@ -29,22 +51,19 @@ def main():
     yolo_model = YOLO('yolov8n.pt')
 
     dashboard = SimpleDashboard(session_tracker, state_manager, alarm)
-    dashboard_thread = threading.Thread(target=dashboard.run, daemon=True)
-    dashboard_thread.start()
 
     print("Sistem dimulai. Kalibrasi otomatis dalam 5 detik...")
     print("Instruksi: Hadapkan wajah ke kamera, mata terbuka, mulut tertutup.")
     print("Jangan bicara atau menguap selama kalibrasi.")
 
     calibrating = True
-    frame_count = 0
 
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
+    def process_frame():
+        nonlocal calibrating
 
-        frame_count += 1
+        frame = camera_thread.get_frame()
+        if frame is None:
+            return None, None
 
         if dashboard.recalibrating:
             calibrating = True
@@ -87,14 +106,12 @@ def main():
                                   (w // 2 - 100 + progress_width, h // 2 + 80),
                                   (0, 255, 0), -1)
 
+            return frame, face_data
+
         elif dashboard.paused:
             cv2.putText(frame, "PAUSED - Tekan tombol Resume di Dashboard",
                         (50, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-            cv2.imshow('Drowsiness & Study Distraction Detection', frame)
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-            continue
+            return frame, None
 
         else:
             face_data = face_analyzer.analyze(frame)
@@ -141,17 +158,28 @@ def main():
             }
 
             annotated_frame = Overlay.draw(annotated_frame, status, info)
-            frame = annotated_frame
 
             dashboard.update(status, face_data['ear'], face_data['lip_distance'], face_data['head_pose'])
 
-        cv2.imshow('Drowsiness & Study Distraction Detection', frame)
+            return annotated_frame, face_data
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    def show_frame():
+        while True:
+            frame, _ = process_frame()
+            if frame is not None:
+                cv2.imshow('Drowsiness & Study Distraction Detection', frame)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+    show_thread = threading.Thread(target=show_frame, daemon=True)
+    show_thread.start()
+
+    dashboard.run()
 
     alarm.stop()
-    cap.release()
+    camera_thread.stop()
+    show_thread.join(timeout=1)
     cv2.destroyAllWindows()
     print("Sistem dihentikan.")
 
