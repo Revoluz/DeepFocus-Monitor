@@ -1,2 +1,7 @@
-yolov5
+yolov5/
 /yolov5
+__pycache__/
+*.pyc
+.venv/
+*.pt
+*.task
