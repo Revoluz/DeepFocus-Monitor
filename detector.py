@@ -12,7 +12,6 @@ File ini menggabungkan semua modul deteksi menjadi satu file:
 
 import math
 import time
-import csv
 import threading
 import numpy as np
 import cv2
@@ -313,16 +312,6 @@ class SessionTracker:
         self.yawning_total = 0
         self.ear_hist = []
         self.lip_hist = []
-
-    def export_csv(self, filename='session_log.csv'):
-        if not self.ear_hist:
-            return False
-        with open(filename, 'w', newline='') as f:
-            w = csv.writer(f)
-            w.writerow(['timestamp', 'ear', 'lip_distance'])
-            for i, (e, l) in enumerate(zip(self.ear_hist, self.lip_hist)):
-                w.writerow([i, e, l])
-        return True
 
 
 # =============================================================================

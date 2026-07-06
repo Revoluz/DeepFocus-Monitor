@@ -59,8 +59,6 @@ class SimpleDashboard:
         self.pause_btn.pack(side=tk.LEFT, padx=5)
         self.recalib_btn = tk.Button(btns, text="🔄 Kalibrasi Ulang", font=("Arial", 12), command=self.start_recalibration, width=15)
         self.recalib_btn.pack(side=tk.LEFT, padx=5)
-        self.export_btn = tk.Button(btns, text="📊 Export CSV", font=("Arial", 12), command=self.export_csv, width=12)
-        self.export_btn.pack(side=tk.LEFT, padx=5)
 
     def update(self, status, ear, lip, head_pose):
         self.timer_lbl.configure(text=f"Session: {self.tracker.duration()}")
@@ -117,12 +115,6 @@ class SimpleDashboard:
             self.pause_btn.configure(text="▶ Resume")
             self.state_mgr.reset_calibration()
             self.tracker.reset()
-
-    def export_csv(self):
-        if self.tracker.export_csv():
-            messagebox.showinfo("Export", "Session log berhasil di-export ke session_log.csv")
-        else:
-            messagebox.showwarning("Export", "Belum ada data untuk di-export.")
 
     def run(self):
         self.root.mainloop()
