@@ -80,7 +80,7 @@ def main():
 
     face = FaceAnalyzer(fps=FPS)
     state = StateManager(fps=FPS)
-    tracker = SessionTracker()
+    tracker = SessionTracker(fps=FPS)
     alarm = Alarm()
     yolo = YOLO('yolov8n.pt')
     dashboard = SimpleDashboard(tracker, state, alarm)

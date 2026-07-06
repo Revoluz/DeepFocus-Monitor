@@ -75,7 +75,7 @@ class SimpleDashboard:
         if head_pose:
             self.yaw_lbl.configure(text=f"YAW: {head_pose.get('yaw', 0):.1f}°")
 
-        self.cnt_lbl.configure(text=f"Microsleep: {self.tracker.microsleep_total}x | Yawning: {self.tracker.yawning_total}x")
+        self.cnt_lbl.configure(text=f"Microsleep: {self.tracker.microsleep_seconds():.1f}s | Yawning: {self.tracker.yawning_seconds():.1f}s")
         self._draw_chart()
 
         msg = self.state_mgr.check_break(self.tracker)

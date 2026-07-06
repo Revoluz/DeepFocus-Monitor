@@ -271,11 +271,12 @@ class StateManager:
 class SessionTracker:
     """Tracking statistik sesi belajar."""
 
-    def __init__(self):
+    def __init__(self, fps=config.FPS):
         self.start = time.time()
         self.counts = {'NORMAL': 0, 'YAWNING': 0, 'DROWSY': 0, 'DISTRACTED': 0, 'MICROSLEEP': 0, 'PHONE_ALERT': 0, 'FACE_LOST': 0}
-        self.microsleep_total = 0
-        self.yawning_total = 0
+        self.microsleep_frames = 0
+        self.yawning_frames = 0
+        self.fps = fps
         self.ear_hist = []
         self.lip_hist = []
 
@@ -286,19 +287,25 @@ class SessionTracker:
         if lip is not None:
             self.lip_hist.append(lip)
         if status == 'MICROSLEEP':
-            self.microsleep_total += 1
+            self.microsleep_frames += 1
         elif status in ['YAWNING', 'DROWSY']:
-            self.yawning_total += 1
+            self.yawning_frames += 1
 
     def focus_score(self):
         total = sum(self.counts.values())
         return (self.counts['NORMAL'] / total * 100) if total > 0 else 100.0
 
+    def microsleep_seconds(self):
+        return self.microsleep_frames / self.fps
+
+    def yawning_seconds(self):
+        return self.yawning_frames / self.fps
+
     def check_break_reminder(self, ms_thr=3, yawn_thr=5):
-        if self.microsleep_total >= ms_thr:
-            return f"Anda sudah {self.microsleep_total}x microsleep. Disarankan istirahat 5 menit!"
-        elif self.yawning_total >= yawn_thr:
-            return f"Anda sudah {self.yawning_total}x menguap. Mungkin perlu istirahat?"
+        if self.microsleep_seconds() >= ms_thr:
+            return f"Anda sudah {self.microsleep_seconds():.1f}s microsleep. Disarankan istirahat 5 menit!"
+        elif self.yawning_seconds() >= yawn_thr:
+            return f"Anda sudah {self.yawning_seconds():.1f}s menguap. Mungkin perlu istirahat?"
         return None
 
     def duration(self):
@@ -308,8 +315,8 @@ class SessionTracker:
     def reset(self):
         self.start = time.time()
         self.counts = {k: 0 for k in self.counts}
-        self.microsleep_total = 0
-        self.yawning_total = 0
+        self.microsleep_frames = 0
+        self.yawning_frames = 0
         self.ear_hist = []
         self.lip_hist = []
 
