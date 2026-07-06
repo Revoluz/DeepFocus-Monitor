@@ -165,7 +165,8 @@ class StateManager:
         if phone_detected:
             if self.phone_counter >= config.PHONE_LIMIT_FRAMES:
                 return 'PHONE_ALERT'
-            return 'DISTRACTED'
+            elif self.phone_counter >= config.PHONE_DISTRACTED_FRAMES:
+                return 'DISTRACTED'
 
         return state
 
