@@ -9,6 +9,7 @@ class SessionTracker:
             'NORMAL': 0,
             'YAWNING': 0,
             'DROWSY': 0,
+            'DISTRACTED': 0,
             'MICROSLEEP': 0,
             'PHONE_ALERT': 0,
             'FACE_LOST': 0,
