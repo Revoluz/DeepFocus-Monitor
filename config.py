@@ -59,7 +59,6 @@ STATUS_COLORS = {
     'YAWNING': (0, 165, 255),
     'DROWSY': (0, 165, 255),
     'DISTRACTED': (0, 140, 255),
-    'LOOKING_AWAY': (0, 165, 255),
     'MICROSLEEP': (0, 0, 255),
     'PHONE_ALERT': (0, 0, 255),
     'FACE_LOST': (255, 255, 255),
