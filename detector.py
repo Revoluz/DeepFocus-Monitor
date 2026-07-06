@@ -145,8 +145,15 @@ class DynamicCalibration:
         self.lip_samples.append(lip)
         self.current_frame += 1
         if self.current_frame >= self.total_frames:
-            self.ear_threshold = np.mean(self.ear_samples) - (config.THRESHOLD_STD_MULTIPLIER * np.std(self.ear_samples))
-            self.lip_threshold = np.mean(self.lip_samples) + (config.THRESHOLD_STD_MULTIPLIER * np.std(self.lip_samples))
+            ear_mean = np.mean(self.ear_samples)
+            ear_std = np.std(self.ear_samples)
+            lip_mean = np.mean(self.lip_samples)
+            lip_std = np.std(self.lip_samples)
+            
+            # Gunakan MAX antara statistical threshold dan fixed offset minimum
+            # agar tidak terlalu sensitif saat std kecil
+            self.ear_threshold = max(ear_mean - (config.THRESHOLD_STD_MULTIPLIER * ear_std), ear_mean - 0.05)
+            self.lip_threshold = max(lip_mean + (config.THRESHOLD_STD_MULTIPLIER * lip_std), lip_mean + 0.01)
             return True
         return False
 
