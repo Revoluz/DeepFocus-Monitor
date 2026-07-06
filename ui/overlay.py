@@ -33,8 +33,9 @@ class Overlay:
             'NORMAL': 'FOKUS',
             'YAWNING': 'PERINGATAN: MENGUAP',
             'DROWSY': 'PERINGATAN: MENGANTUK',
+            'DISTRACTED': 'TERDISTRASI: MEMEGANG HP',
             'MICROSLEEP': 'BAHAYA: MICROSLEEP!',
-            'PHONE_ALERT': 'BAHAYA: HP TERDETEKSI!',
+            'PHONE_ALERT': 'BAHAYA: HP TERLALU LAMA!',
             'FACE_LOST': 'WAJAH TIDAK TERDETEKSI',
         }
 

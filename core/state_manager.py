@@ -162,8 +162,10 @@ class StateManager:
         yaw = head_pose.get('yaw', 0.0) if head_pose else 0.0
         state = self.classifier.update(ear, lip_distance, face_detected)
 
-        if self.phone_counter >= config.PHONE_LIMIT_FRAMES:
-            return 'PHONE_ALERT'
+        if phone_detected:
+            if self.phone_counter >= config.PHONE_LIMIT_FRAMES:
+                return 'PHONE_ALERT'
+            return 'DISTRACTED'
 
         return state
 

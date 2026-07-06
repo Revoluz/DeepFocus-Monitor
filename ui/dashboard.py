@@ -76,6 +76,7 @@ class SimpleDashboard:
             'NORMAL': 'green',
             'YAWNING': 'orange',
             'DROWSY': 'orange',
+            'DISTRACTED': 'darkorange',
             'MICROSLEEP': 'red',
             'PHONE_ALERT': 'red',
             'FACE_LOST': 'gray',
@@ -84,8 +85,9 @@ class SimpleDashboard:
             'NORMAL': 'FOKUS',
             'YAWNING': 'MENGUAP',
             'DROWSY': 'MENGANTUK',
+            'DISTRACTED': 'TERDISTRASI: HP',
             'MICROSLEEP': 'MICROSLEEP!',
-            'PHONE_ALERT': 'HP TERDETEKSI!',
+            'PHONE_ALERT': 'HP TERLALU LAMA!',
             'FACE_LOST': 'WAJAH HILANG',
         }
         color = status_colors.get(status, 'black')
