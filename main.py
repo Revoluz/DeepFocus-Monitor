@@ -89,9 +89,10 @@ def main():
     print("Instruksi: Hadapkan wajah ke kamera, mata terbuka, mulut tertutup.")
 
     calibrating = True
+    last_status = None
 
     def process():
-        nonlocal calibrating
+        nonlocal calibrating, last_status
         frame = cam.get_frame()
         if frame is None:
             return None
@@ -136,6 +137,10 @@ def main():
 
         status = state.update(fd['ear'], fd['lip_distance'], fd['head_pose'], phone, fd['face_detected'])
         tracker.update(status, fd['ear'], fd['lip_distance'])
+
+        if status != last_status:
+            print(f"Status terdeteksi: {status}")
+            last_status = status
 
         if status in ['MICROSLEEP', 'PHONE_ALERT']:
             alarm.play(status)

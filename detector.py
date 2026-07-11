@@ -178,6 +178,7 @@ class MicrosleepClassifier:
         self.ear_cnt = 0
         self.lip_cnt = 0
         self.yawn_ts = []
+        self.in_yawn = False
         self.state = self.NORMAL
 
     def update(self, ear, lip, face_ok=True):
@@ -188,18 +189,20 @@ class MicrosleepClassifier:
         self.ear_cnt = self.ear_cnt + 1 if ear < self.ear_thr else 0
 
         if lip > self.lip_thr:
-            if self.lip_cnt == 0:
+            if not self.in_yawn:
+                self.in_yawn = True
                 self.yawn_ts.append(time.time())
             self.lip_cnt += 1
         else:
+            self.in_yawn = False
             self.lip_cnt = 0
 
-        recent = [t for t in self.yawn_ts if time.time() - t <= config.YAWN_WINDOW_SECONDS]
-        self.yawn_ts = recent
+        now = time.time()
+        self.yawn_ts = [t for t in self.yawn_ts if now - t <= config.YAWN_WINDOW_SECONDS]
 
         if self.ear_cnt >= config.MICROSLEEP_MIN_FRAMES:
             self.state = self.MICROSLEEP
-        elif len(recent) >= config.YAWN_SEQUENCE_THRESHOLD:
+        elif len(self.yawn_ts) >= config.YAWN_SEQUENCE_THRESHOLD:
             self.state = self.DROWSY
         elif lip > self.lip_thr:
             self.state = self.YAWNING
@@ -211,6 +214,7 @@ class MicrosleepClassifier:
         self.ear_cnt = 0
         self.lip_cnt = 0
         self.yawn_ts = []
+        self.in_yawn = False
         self.state = self.NORMAL
 
 
@@ -250,13 +254,15 @@ class StateManager:
         if not face_ok:
             self.phone_cnt = 0
             return 'FACE_LOST'
-        self.phone_cnt = self.phone_cnt + 1 if phone_ok else 0
-        state = self.classifier.update(ear, lip, face_ok)
+
         if phone_ok:
+            self.phone_cnt += 1
             if self.phone_cnt >= config.PHONE_LIMIT_FRAMES:
                 return 'PHONE_ALERT'
-            elif self.phone_cnt >= config.PHONE_DISTRACTED_FRAMES:
-                return 'DISTRACTED'
+            return 'DISTRACTED'
+
+        self.phone_cnt = 0
+        state = self.classifier.update(ear, lip, face_ok)
         return state
 
     def check_break(self, tracker):
@@ -346,6 +352,7 @@ class Alarm:
         self.stop_evt = threading.Event()
         self.thread = None
         self.engine = None
+        self.lock = threading.Lock()
 
     def _init_engine(self):
         if self.engine is None:
@@ -354,9 +361,9 @@ class Alarm:
             self.engine.setProperty('volume', 1.0)
 
     def play(self, alarm_type='MICROSLEEP'):
-        if self.playing:
+        if self.playing and self.thread and self.thread.is_alive():
             return
-        self.stop_evt.clear()
+        self.stop_evt = threading.Event()
         self.playing = True
         self.thread = threading.Thread(target=self._speak, args=(alarm_type,), daemon=True)
         self.thread.start()
@@ -364,17 +371,22 @@ class Alarm:
     def _speak(self, alarm_type):
         self._init_engine()
         msg = MESSAGES.get(alarm_type, MESSAGES['MICROSLEEP'])
-        while not self.stop_evt.is_set():
-            self.engine.say(msg)
-            self.engine.runAndWait()
-            self.stop_evt.wait(2)
+        try:
+            while not self.stop_evt.is_set():
+                with self.lock:
+                    self.engine.say(msg)
+                    self.engine.runAndWait()
+                if self.stop_evt.wait(2):
+                    break
+        finally:
+            self.playing = False
 
     def stop(self):
-        if not self.playing:
+        if not self.playing and not (self.thread and self.thread.is_alive()):
             return
         self.stop_evt.set()
-        self.playing = False
-        if self.thread:
+        if self.thread and self.thread.is_alive():
             self.thread.join(timeout=3)
+        self.playing = False
         if self.engine:
             self.engine.stop()

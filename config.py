@@ -15,7 +15,7 @@ Parameter utama:
 # =============================================================================
 # KONFIGURASI KAMERA
 # =============================================================================
-CAMERA_INDEX = 2  # Indeks webcam (0 = default, ubah jika kamera tidak terdeteksi)
+CAMERA_INDEX = 0  # Indeks webcam (0 = default, ubah jika kamera tidak terdeteksi)
 FPS = 30  # Frame per second (asumsi webcam standar)
 
 # =============================================================================
@@ -42,8 +42,8 @@ YOLO_CLASSES = [0, 67, 73]  # Kelas COCO: 0=person, 67=cell phone, 73=book
 YOLO_CONFIDENCE = 0.5  # Minimum confidence threshold untuk deteksi YOLO
 
 # Threshold durasi HP terdeteksi (dalam frame)
-PHONE_DISTRACTED_FRAMES = 150  # 150 frame ≈ 5 detik → status DISTRACTED
-PHONE_LIMIT_FRAMES = 300  # 300 frame ≈ 10 detik → status PHONE_ALERT + alarm
+PHONE_DISTRACTED_FRAMES = 1  # langsung tampil status DISTRACTED saat HP terdeteksi
+PHONE_LIMIT_FRAMES = 60  # setelah HP terdeteksi cukup lama → status PHONE_ALERT + alarm
 
 # =============================================================================
 # KONFIGURASI HEAD POSE
