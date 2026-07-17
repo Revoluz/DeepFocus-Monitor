@@ -15,7 +15,7 @@ Parameter utama:
 # =============================================================================
 # KONFIGURASI KAMERA
 # =============================================================================
-CAMERA_INDEX = 0  # Indeks webcam (0 = default, ubah jika kamera tidak terdeteksi)
+CAMERA_INDEX = 2  # Indeks webcam (0 = default, ubah jika kamera tidak terdeteksi)
 FPS = 30  # Frame per second (asumsi webcam standar)
 
 # =============================================================================

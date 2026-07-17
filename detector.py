@@ -563,6 +563,11 @@ class StateManager:
             return 'DISTRACTED'  # HP terdeteksi → warning
 
         self.phone_cnt = 0
+        
+        # Cek apakah classifier sudah diinisialisasi (bisa None saat kalibrasi ulang)
+        if self.classifier is None:
+            return 'NORMAL'
+        
         state = self.classifier.update(ear, lip, face_ok)
         return state
 
