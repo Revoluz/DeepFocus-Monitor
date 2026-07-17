@@ -654,52 +654,44 @@ MESSAGES = {
 
 
 class Alarm:
-    """Sistem alarm suara menggunakan Text-to-Speech (pyttsx3)."""
+    """Sistem alarm suara menggunakan Text-to-Speech (pyttsx3). Non-blocking."""
 
     def __init__(self):
         self.playing = False
         self.stop_evt = threading.Event()
         self.thread = None
-        self.engine = None
-        self.lock = threading.Lock()
-
-    def _init_engine(self):
-        """Inisialisasi pyttsx3 engine dengan pengaturan suara."""
-        if self.engine is None:
-            self.engine = pyttsx3.init()
-            self.engine.setProperty('rate', 150)
-            self.engine.setProperty('volume', 1.0)
+        self.engine = pyttsx3.init()
+        self.engine.setProperty('rate', 150)
+        self.engine.setProperty('volume', 1.0)
 
     def play(self, alarm_type='MICROSLEEP'):
-        """Memulai alarm di thread terpisah."""
+        """Memulai alarm di thread terpisah. Skip jika sudah playing."""
         if self.playing and self.thread and self.thread.is_alive():
             return
-        self.stop_evt = threading.Event()
+        self.stop_evt.clear()
         self.playing = True
         self.thread = threading.Thread(target=self._speak, args=(alarm_type,), daemon=True)
         self.thread.start()
 
     def _speak(self, alarm_type):
-        """Loop Text-to-Speech message sampai di-stop."""
-        self._init_engine()
+        """Loop Text-to-Speech message sampai di-stop. Non-blocking."""
         msg = MESSAGES.get(alarm_type, MESSAGES['MICROSLEEP'])
         try:
             while not self.stop_evt.is_set():
-                with self.lock:
-                    self.engine.say(msg)
-                    self.engine.runAndWait()
+                self.engine.say(msg)
+                self.engine.runAndWait()
                 if self.stop_evt.wait(2):
                     break
+        except Exception:
+            pass
         finally:
             self.playing = False
 
     def stop(self):
         """Menghentikan alarm dan cleanup thread."""
-        if not self.playing and not (self.thread and self.thread.is_alive()):
+        if not self.playing:
             return
         self.stop_evt.set()
         if self.thread and self.thread.is_alive():
-            self.thread.join(timeout=3)
+            self.thread.join(timeout=2)
         self.playing = False
-        if self.engine:
-            self.engine.stop()
