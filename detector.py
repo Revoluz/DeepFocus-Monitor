@@ -464,17 +464,18 @@ class MicrosleepClassifier:
         self.yawn_ts = [t for t in self.yawn_ts if now - t <= config.YAWN_WINDOW_SECONDS]
 
         # =========================================================
-        # 4. KLASIFIKASI STATE (prioritas dari yang paling kritis)
+        # 4. KLASIFIKASI STATE (prioritas: yawning dulu, baru microsleep)
         # =========================================================
-        if self.ear_cnt >= config.MICROSLEEP_MIN_FRAMES:
-            # Mata terpejam >= 30 frame (1 detik) → MICROSLEEP
-            self.state = self.MICROSLEEP
-        elif len(self.yawn_ts) >= config.YAWN_SEQUENCE_THRESHOLD:
+        # Cek yawning DULUAN karena saat menguap mata juga tertutup
+        if len(self.yawn_ts) >= config.YAWN_SEQUENCE_THRESHOLD:
             # 3x menguap dalam 10 detik → DROWSY
             self.state = self.DROWSY
         elif lip > self.lip_thr:
             # Sedang menguap (1x) → YAWNING
             self.state = self.YAWNING
+        elif self.ear_cnt >= config.MICROSLEEP_MIN_FRAMES:
+            # Mata terpejam >= 30 frame (1 detik) → MICROSLEEP
+            self.state = self.MICROSLEEP
         else:
             # Tidak ada tanda kantuk → NORMAL
             self.state = self.NORMAL
